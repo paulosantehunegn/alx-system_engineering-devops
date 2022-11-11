@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
-# Start/Stops/Restarts. Script to be used with manage_my_process
+# Manages the program called manage_my_process
 
-file="/var/run/my_process.pid"
-process_start()
+FILE="/var/run/my_process.pid"
+
+create()
 {
+    sudo touch $FILE
+    sudo bash -c "echo $$ > $FILE"
+}
+
+if [ "$1" == "start" ]; then
+    create
     ./manage_my_process &
-    echo "$!" > "$file"
-}
+    echo "manage_my_process started"
 
-process_stop()
-{
-    kill "$(cat $file)"
-    rm $file
-}
-case "$1" in
-     start)
-	 process_start
-	 echo "manage_my_process started"
-	 ;;
-     stop)
-	 process_stop
-	 echo "manage_my_process stopped"
-	 ;;
-     restart)
-	 process_stop
-	 process_start
-	 echo "manage_my_process restarted"
-	 ;;
-     *)
-	 echo "Usage: manage_my_process {start|stop|restart}"
-	 ;;
-esac
+elif [ "$1" == "stop" ]
+then
+    [ -e "/var/run/my_process.pid" ] && sudo pkill -f "./manage_my_process" && rm /var/run/my_process.pid
+    echo "manage_my_process stopped"
+
+elif [ "$1" == "restart" ]
+then
+    $0 stop >& /dev/null
+    $0 start >& /dev/null
+    echo "manage_my_process restarted"
+
+else
+    echo "Usage: manage_my_process {start|stop|restart}"
+fi
